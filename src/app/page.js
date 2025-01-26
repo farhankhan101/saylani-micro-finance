@@ -1,101 +1,212 @@
-import Image from "next/image";
+'use client';
+import React, { useState } from 'react';
+import { Container, Typography, Box, MenuItem, Select, InputLabel, FormControl, TextField, Button, Grid, Paper } from '@mui/material';
+import ProceedPopup from '../components/ProceedPopup';  // import ProceedPopup component
+import LoanRequestForm from '../components/LoanRequestForm';  // import LoanRequestForm component
+import LoanSlip from '../components/LoanSlip'; // import SlipGeneration component
 
-export default function Home() {
+const MainPage = () => {
+  const loanCategories = [
+    {
+      name: 'Wedding Loans',
+      subcategories: ['Valima', 'Furniture', 'Valima Food', 'Jahez'],
+      maxLoan: 500000,
+      loanPeriod: 3,
+    },
+    {
+      name: 'Home Construction Loans',
+      subcategories: ['Structure', 'Finishing', 'Loan'],
+      maxLoan: 1000000,
+      loanPeriod: 5,
+    },
+    {
+      name: 'Business Startup Loans',
+      subcategories: ['Buy Stall', 'Advance Rent for Shop', 'Shop Assets', 'Shop Machinery'],
+      maxLoan: 1000000,
+      loanPeriod: 5,
+    },
+    {
+      name: 'Education Loans',
+      subcategories: ['University Fees', 'Child Fees Loan'],
+      maxLoan: 'Based on requirement',
+      loanPeriod: 4,
+    },
+  ];
+
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [deposit, setDeposit] = useState('');
+  const [loanPeriod, setLoanPeriod] = useState('');
+  const [loanBreakdown, setLoanBreakdown] = useState(null);
+  const [showProceedPopup, setShowProceedPopup] = useState(false);
+  const [userDetails, setUserDetails] = useState(null);
+
+  const handleCalculateLoan = () => {
+    const selectedCategoryDetails = loanCategories.find((cat) => cat.name === selectedCategory);
+    if (selectedCategoryDetails && deposit && loanPeriod) {
+      const maxLoan = selectedCategoryDetails.maxLoan;
+      const loanAmount = maxLoan - deposit;
+      const monthlyInstallment = loanAmount / (loanPeriod * 12);
+
+      setLoanBreakdown({
+        loanAmount,
+        monthlyInstallment,
+        totalRepayment: loanAmount + (monthlyInstallment * loanPeriod * 12),
+      });
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <Container maxWidth="lg">
+      <Typography variant="h3" align="center" gutterBottom>
+        Saylani Micro Finance App
+      </Typography>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      {/* Loan Categories Section */}
+      <Box mb={4}>
+        <Typography variant="h5" gutterBottom>
+          Loan Categories & Details
+        </Typography>
+        <Grid container spacing={4}>
+          {loanCategories.map((category, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <Paper elevation={3} sx={{ padding: 3, borderRadius: 2 }}>
+                <Typography variant="h6" color="primary">
+                  {category.name}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Subcategories:</strong> {category.subcategories.join(', ')}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Max Loan:</strong> PKR {category.maxLoan.toLocaleString()}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Loan Period:</strong> {category.loanPeriod} years
+                </Typography>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+
+      {/* Loan Calculator Section */}
+      <Box>
+        <Typography variant="h5" gutterBottom>
+          Loan Calculator
+        </Typography>
+        <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Category Select */}
+          <FormControl fullWidth>
+            <InputLabel>Loan Category</InputLabel>
+            <Select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setSelectedSubcategory('');
+              }}
+              label="Loan Category"
+            >
+              {loanCategories.map((category, index) => (
+                <MenuItem key={index} value={category.name}>
+                  {category.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Subcategory Select */}
+          <FormControl fullWidth disabled={!selectedCategory}>
+            <InputLabel>Subcategory</InputLabel>
+            <Select
+              value={selectedSubcategory}
+              onChange={(e) => setSelectedSubcategory(e.target.value)}
+              label="Subcategory"
+            >
+              {selectedCategory &&
+                loanCategories
+                  .find((cat) => cat.name === selectedCategory)
+                  ?.subcategories.map((sub, index) => (
+                    <MenuItem key={index} value={sub}>
+                      {sub}
+                    </MenuItem>
+                  ))}
+            </Select>
+          </FormControl>
+
+          {/* Initial Deposit Input */}
+          <TextField
+            label="Initial Deposit (PKR)"
+            type="number"
+            fullWidth
+            value={deposit}
+            onChange={(e) => setDeposit(e.target.value)}
+            required
+          />
+
+          {/* Loan Period Input */}
+          <TextField
+            label="Loan Period (Years)"
+            type="number"
+            fullWidth
+            value={loanPeriod}
+            onChange={(e) => setLoanPeriod(e.target.value)}
+            required
+          />
+
+          {/* Calculate Button */}
+          <Button variant="contained" color="primary" onClick={handleCalculateLoan} sx={{ padding: '10px 20px' }}>
+            Calculate Loan
+          </Button>
+
+          {/* Proceed Button (Opens the Proceed Popup) */}
+          <Button
+            variant="contained"
+            color="secondary"
+            sx={{ padding: '10px 20px', marginTop: 2 }}
+            onClick={() => setShowProceedPopup(true)}
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            Proceed with Application
+          </Button>
+        </Box>
+
+        {/* Loan Breakdown */}
+        {loanBreakdown && (
+          <Box sx={{ marginTop: 4, padding: 3, borderRadius: 2, backgroundColor: '#f5f5f5' }}>
+            <Typography variant="h6" color="primary">
+              Loan Breakdown
+            </Typography>
+            <Typography variant="body1">
+              <strong>Loan Amount:</strong> PKR {loanBreakdown.loanAmount.toLocaleString()}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Monthly Installment:</strong> PKR {loanBreakdown.monthlyInstallment.toLocaleString()}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Total Repayment:</strong> PKR {loanBreakdown.totalRepayment.toLocaleString()}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Proceed Popup */}
+      {showProceedPopup && (
+        <ProceedPopup
+          setUserDetails={setUserDetails}
+          setShowProceedPopup={setShowProceedPopup}
+        />
+      )}
+
+      {/* Loan Request Form (only after user has details) */}
+      {userDetails && (
+        <LoanRequestForm userDetails={userDetails} />
+      )}
+
+      {/* Slip Generation (after request form is submitted) */}
+      {userDetails && (
+        <LoanSlip userDetails={userDetails} />
+      )}
+    </Container>
   );
-}
+};
+
+export default MainPage;
