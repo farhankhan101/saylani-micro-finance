@@ -24,7 +24,7 @@ const Header = () => {
   return (
     <AppBar position="sticky">
       <Toolbar>
-        <Box className={classes.navbar}>
+        <Box className={classes.navbar }>
           <Typography variant="h6" className={classes.logoText}>
             MyLogo
           </Typography>
